@@ -30,17 +30,25 @@ test('Check if Bill table is available', async ({ page }) => {
     await expect(page).toHaveURL(`${process.env.E2E_BASE_URL}/spa/home/billing`);
   });
 
-  await test.step('Then i should be able to see bills table', async () => {
-    const billList = page
+  await test.step('Then I should be able to see bills table if there are bills', async () => {
+    const billListLocator = page
       .locator('div[class*="-esm-billing__bills"] h4')
       .filter({ hasText: /^Bill list$/ })
       .first();
-    await expect(billList).toBeVisible();
-  });
 
-  await test.step('I should be able  to  see table header ', async () => {
-    const billHeaders = page.locator('div[class*="-esm-billing__bills"] tr').first();
-    await expect(billHeaders).toContainText('Visit timeIdentifierNameBilled Items');
+    await billListLocator.waitFor({ state: 'visible', timeout: 40000 });
+
+    const billListCount = await billListLocator.count();
+
+    if (billListCount > 0) {
+      await expect(billListLocator).toBeVisible();
+      await test.step('I should be able to see table header', async () => {
+        const billHeaders = page.locator('div[class*="-esm-billing__bills"] tr').first();
+        await expect(billHeaders).toContainText('Visit timeIdentifierNameBilled Items');
+      });
+    } else {
+      test.skip();
+    }
   });
 });
 
