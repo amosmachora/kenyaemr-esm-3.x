@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ModalHeader, ModalBody, ModalFooter, Button, Loading } from '@carbon/react';
-import styles from './cancel-line-item.scss';
+import styles from './line-item-modals.scss';
 import { useTranslation } from 'react-i18next';
 import { showSnackbar } from '@openmrs/esm-framework';
 import { processBillItems } from '../../../billing.resource';

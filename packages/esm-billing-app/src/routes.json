@@ -127,10 +127,6 @@
   ],
   "modals": [
     {
-      "name": "cancel-line-item",
-      "component": "cancelLineItemModal"   
-    },
-    {
       "name": "refund-line-item",
       "component": "refundLineItemModal"   
     },

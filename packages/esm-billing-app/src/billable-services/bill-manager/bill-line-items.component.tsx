@@ -40,27 +40,25 @@ const BillLineItems: React.FC<{ bill: MappedBill }> = ({ bill }) => {
   );
 };
 
+// TODO use the PaymentStatus enum in this PR https://github.com/palladiumkenya/kenyaemr-esm-3.x/pull/302
 const LineItemRow = ({ lineItem, bill }: { lineItem: LineItem; bill: MappedBill }) => {
-  // TODO use the PaymentStatus enum in this PR https://github.com/palladiumkenya/kenyaemr-esm-3.x/pull/302
-
-  const refundedLineItemUUIDs = bill.lineItems.filter((li) => li.paymentStatus === 'CREDITED').map((li) => li.uuid);
-  const isRefundedLineItem = refundedLineItemUUIDs.includes(lineItem.uuid);
-
-  const refundedLineItemBillableServiceUUIDs = bill.lineItems
-    .filter((li) => li.paymentStatus === 'CREDITED')
-    .map((li) => li.billableService.split(':').at(0));
-
-  const isRefundedBillableService = refundedLineItemBillableServiceUUIDs.includes(
-    lineItem.billableService.split(':').at(0),
-  );
-
   const isPaid = lineItem.paymentStatus === 'PAID';
+  const isRefunded = lineItem.paymentStatus === 'CREDITED';
+
+  // const refundedLineItemBillableServiceUUIDs = bill.lineItems
+  //   .filter((li) => Math.sign(li.price) === -1)
+  //   .map((li) => li.billableService.split(':').at(0));
+
+  // const isRefundedBillableService = refundedLineItemBillableServiceUUIDs.includes(
+  //   lineItem.billableService.split(':').at(0),
+  // );
 
   const { t } = useTranslation();
 
   const handleOpenEditLineItemWorkspace = (lineItem: LineItem) => {
     launchWorkspace('edit-line-item-form', {
       workspaceTitle: t('editLineItemForm', 'Edit Line Item Form'),
+      bill,
       lineItem,
     });
   };
@@ -73,12 +71,6 @@ const LineItemRow = ({ lineItem, bill }: { lineItem: LineItem; bill: MappedBill 
     });
   };
 
-  const handleOpenCancelLineItemModal = () => {
-    const dispose = showModal('cancel-line-item', {
-      onClose: () => dispose(),
-    });
-  };
-
   const handleOpenDeleteLineItemModal = () => {
     const dispose = showModal('delete-line-item', {
       onClose: () => dispose(),
@@ -88,7 +80,7 @@ const LineItemRow = ({ lineItem, bill }: { lineItem: LineItem; bill: MappedBill 
   };
 
   return (
-    <StructuredListRow className={isRefundedLineItem && styles.refundedItem}>
+    <StructuredListRow className={isRefunded && styles.refundedItem}>
       <StructuredListCell>
         {lineItem.item === '' ? extractString(lineItem.billableService) : extractString(lineItem.item)}
       </StructuredListCell>
@@ -98,8 +90,7 @@ const LineItemRow = ({ lineItem, bill }: { lineItem: LineItem; bill: MappedBill 
       <StructuredListCell>
         <OverflowMenu aria-label="overflow-menu">
           <OverflowMenuItem itemText="Edit Item" onClick={() => handleOpenEditLineItemWorkspace(lineItem)} />
-          <OverflowMenuItem itemText="Cancel Item" onClick={handleOpenCancelLineItemModal} />
-          {isPaid && !isRefundedBillableService && (
+          {isPaid && (
             <OverflowMenuItem itemText="Refund Item" onClick={() => handleOpenRefundLineItemModal(lineItem)} />
           )}
           {isPaid && <OverflowMenuItem itemText="Delete Item" onClick={handleOpenDeleteLineItemModal} />}

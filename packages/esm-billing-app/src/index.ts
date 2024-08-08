@@ -18,7 +18,6 @@ import TestOrderAction from './billable-services/billiable-item/test-order/test-
 import PriceInfoOrder from './billable-services/billiable-item/test-order/price-info-order.componet';
 import ProcedureOrder from './billable-services/billiable-item/test-order/procedure-order.component';
 import ImagingOrder from './billable-services/billiable-item/test-order/imaging-order.component';
-import { CancelLineItem } from './billable-services/bill-manager/modals/cancel-line-item.modal';
 import { DeleteLineItem } from './billable-services/bill-manager/modals/delete-line-item.modal';
 import { WaiveBillForm } from './billable-services/bill-manager/workspaces/waive-bill-form.workspace';
 import { EditLineItem } from './billable-services/bill-manager/workspaces/edit-line-item.workspace';
@@ -64,7 +63,6 @@ export const drugOrder = getSyncLifecycle(DrugOrder, options);
 export const testOrderAction = getSyncLifecycle(TestOrderAction, options);
 
 // bill manager modals
-export const cancelLineItemModal = getSyncLifecycle(CancelLineItem, options);
 export const deleteLineItemModal = getSyncLifecycle(DeleteLineItem, options);
 
 // bill manager extensions
