@@ -15,13 +15,13 @@ import InitiatePaymentDialog from './invoice/payments/initiate-payment/initiate-
 import DrugOrder from './billable-services/billiable-item/drug-order/drug-order.component';
 import LabOrder from './billable-services/billiable-item/test-order/lab-order.component';
 import TestOrderAction from './billable-services/billiable-item/test-order/test-order-action.component';
-import { EditBillForm } from './billable-services/bill-manager/workspaces/edit-bill-form.workspace';
-import { WaiveBillForm } from './billable-services/bill-manager/workspaces/waive-bill-form.workspace';
-import { CancelBillModal } from './billable-services/bill-manager/modals/cancel-bill.modal';
-import { DeleteBillModal } from './billable-services/bill-manager/modals/delete-bill.modal';
 import PriceInfoOrder from './billable-services/billiable-item/test-order/price-info-order.componet';
 import ProcedureOrder from './billable-services/billiable-item/test-order/procedure-order.component';
 import ImagingOrder from './billable-services/billiable-item/test-order/imaging-order.component';
+import { CancelLineItem } from './billable-services/bill-manager/modals/cancel-line-item.modal';
+import { DeleteLineItem } from './billable-services/bill-manager/modals/delete-line-item.modal';
+import { WaiveBillForm } from './billable-services/bill-manager/workspaces/waive-bill-form.workspace';
+import { EditLineItem } from './billable-services/bill-manager/workspaces/edit-line-item.workspace';
 
 const moduleName = '@kenyaemr/esm-billing-app';
 
@@ -64,12 +64,12 @@ export const drugOrder = getSyncLifecycle(DrugOrder, options);
 export const testOrderAction = getSyncLifecycle(TestOrderAction, options);
 
 // bill manager modals
-export const cancelBillModal = getSyncLifecycle(CancelBillModal, options);
-export const deleteBillModal = getSyncLifecycle(DeleteBillModal, options);
+export const cancelLineItemModal = getSyncLifecycle(CancelLineItem, options);
+export const deleteLineItemModal = getSyncLifecycle(DeleteLineItem, options);
 
 // bill manager extensions
 export const waiveBillForm = getSyncLifecycle(WaiveBillForm, options);
-export const editBillForm = getSyncLifecycle(EditBillForm, options);
+export const editLineItem = getSyncLifecycle(EditLineItem, options);
 
 export function startupApp() {
   defineConfigSchema(moduleName, configSchema);

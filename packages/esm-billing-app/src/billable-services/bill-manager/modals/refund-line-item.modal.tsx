@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { ModalHeader, ModalBody, ModalFooter, Button, Loading } from '@carbon/react';
-import styles from './cancel-bill.scss';
+import styles from './cancel-line-item.scss';
 import { useTranslation } from 'react-i18next';
 import { showSnackbar } from '@openmrs/esm-framework';
 import { processBillItems } from '../../../billing.resource';
 import { mutate } from 'swr';
 import { LineItem, MappedBill } from '../../../types';
 
-export const RefundBillModal: React.FC<{
+export const RefundLineItem: React.FC<{
   onClose: () => void;
   bill: MappedBill;
   lineItem: LineItem;
@@ -15,7 +15,7 @@ export const RefundBillModal: React.FC<{
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
 
-  const refundBillItems = () => {
+  const refundLineItem = () => {
     const lineItemToBeRefunded = {
       item: lineItem.uuid,
       quantity: lineItem.quantity,
@@ -59,16 +59,16 @@ export const RefundBillModal: React.FC<{
   return (
     <React.Fragment>
       <ModalHeader onClose={onClose} className={styles.modalHeaderLabel} closeModal={onClose}>
-        {t('refundBill', 'Refund Bill')}
+        {t('refundLineItem', 'Refund line item')}
       </ModalHeader>
       <ModalBody className={styles.modalHeaderHeading}>
-        {t('refundBillDescription', 'Are you sure you want to refund this bill? Proceed cautiously.')}
+        {t('refundLineItemDescription', 'Are you sure you want to refund this line item? Proceed cautiously.')}
       </ModalBody>
       <ModalFooter>
         <Button kind="secondary" onClick={onClose}>
           {t('cancel', 'Cancel')}
         </Button>
-        <Button kind="danger" onClick={refundBillItems}>
+        <Button kind="danger" onClick={refundLineItem}>
           {isLoading ? (
             <div className={styles.loading_wrapper}>
               <Loading className={styles.button_spinner} withOverlay={false} small />

@@ -41,28 +41,32 @@ const BillLineItems: React.FC<{ bill: MappedBill }> = ({ bill }) => {
 };
 
 const LineItemRow = ({ lineItem, bill }: { lineItem: LineItem; bill: MappedBill }) => {
-  const refundedLineItemUUIDs = bill.lineItems.filter((li) => Math.sign(li.price) === -1).map((li) => li.uuid);
+  // TODO use the PaymentStatus enum in this PR https://github.com/palladiumkenya/kenyaemr-esm-3.x/pull/302
+
+  const refundedLineItemUUIDs = bill.lineItems.filter((li) => li.paymentStatus === 'CREDITED').map((li) => li.uuid);
   const isRefundedLineItem = refundedLineItemUUIDs.includes(lineItem.uuid);
 
   const refundedLineItemBillableServiceUUIDs = bill.lineItems
-    .filter((li) => Math.sign(li.price) === -1)
+    .filter((li) => li.paymentStatus === 'CREDITED')
     .map((li) => li.billableService.split(':').at(0));
 
   const isRefundedBillableService = refundedLineItemBillableServiceUUIDs.includes(
     lineItem.billableService.split(':').at(0),
   );
 
+  const isPaid = lineItem.paymentStatus === 'PAID';
+
   const { t } = useTranslation();
 
   const handleOpenEditLineItemWorkspace = (lineItem: LineItem) => {
-    launchWorkspace('edit-bill-form', {
-      workspaceTitle: t('editBillForm', 'Edit Bill Form'),
+    launchWorkspace('edit-line-item-form', {
+      workspaceTitle: t('editLineItemForm', 'Edit Line Item Form'),
       lineItem,
     });
   };
 
   const handleOpenRefundLineItemModal = (lineItem: LineItem) => {
-    const dispose = showModal('refund-bill-modal', {
+    const dispose = showModal('refund-line-item', {
       onClose: () => dispose(),
       bill,
       lineItem,
@@ -70,14 +74,16 @@ const LineItemRow = ({ lineItem, bill }: { lineItem: LineItem; bill: MappedBill 
   };
 
   const handleOpenCancelLineItemModal = () => {
-    const dispose = showModal('cancel-bill-modal', {
+    const dispose = showModal('cancel-line-item', {
       onClose: () => dispose(),
     });
   };
 
   const handleOpenDeleteLineItemModal = () => {
-    const dispose = showModal('delete-bill-modal', {
+    const dispose = showModal('delete-line-item', {
       onClose: () => dispose(),
+      bill,
+      lineItem,
     });
   };
 
@@ -93,10 +99,10 @@ const LineItemRow = ({ lineItem, bill }: { lineItem: LineItem; bill: MappedBill 
         <OverflowMenu aria-label="overflow-menu">
           <OverflowMenuItem itemText="Edit Item" onClick={() => handleOpenEditLineItemWorkspace(lineItem)} />
           <OverflowMenuItem itemText="Cancel Item" onClick={handleOpenCancelLineItemModal} />
-          {!isRefundedBillableService && (
+          {isPaid && !isRefundedBillableService && (
             <OverflowMenuItem itemText="Refund Item" onClick={() => handleOpenRefundLineItemModal(lineItem)} />
           )}
-          <OverflowMenuItem itemText="Delete Item" onClick={handleOpenDeleteLineItemModal} />
+          {isPaid && <OverflowMenuItem itemText="Delete Item" onClick={handleOpenDeleteLineItemModal} />}
         </OverflowMenu>
       </StructuredListCell>
     </StructuredListRow>

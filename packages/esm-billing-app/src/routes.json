@@ -81,18 +81,6 @@
       "component": "initiatePaymentDialog"
     },
     {
-      "name": "cancel-bill-modal",
-      "component": "cancelBillModal"   
-    },
-    {
-      "name": "refund-bill-modal",
-      "component": "refundBillModal"   
-    },
-    {
-      "name": "delete-bill-modal",
-      "component": "deleteBillModal"
-    },
-    {
       "name": "lab-order-billable-item",
       "component": "labOrder",
       "slot": "top-of-lab-order-form-slot"
@@ -131,10 +119,24 @@
       "type": "other-form"
     },
     {
-      "name": "edit-bill-form",
-      "component": "editBillForm",
-      "title": "Edit Bill Form",
+      "name": "edit-line-item-form",
+      "component": "editLineItem",
+      "title": "Edit Line Item",
       "type": "other-form"
+    }
+  ],
+  "modals": [
+    {
+      "name": "cancel-line-item",
+      "component": "cancelLineItemModal"   
+    },
+    {
+      "name": "refund-line-item",
+      "component": "refundLineItemModal"   
+    },
+    {
+      "name": "delete-line-item",
+      "component": "deleteLineItemModal"
     }
   ]
 }
