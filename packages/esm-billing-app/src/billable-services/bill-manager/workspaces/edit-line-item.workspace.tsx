@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, ButtonSet, Form, NumberInput, Layer, Loading } from '@carbon/react';
 import styles from './waive-bill-form.scss';
-import { LineItem, MappedBill } from '../../../types';
+import { LineItem, MappedBill, PaymentStatus } from '../../../types';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +10,7 @@ import isEqual from 'lodash-es/isEqual';
 import { DefaultWorkspaceProps, showSnackbar } from '@openmrs/esm-framework';
 import { mutate } from 'swr';
 import { processBillItems } from '../../../billing.resource';
+import { processBillItem } from '../../../utils';
 
 type FormData = {
   quantity: string;
@@ -49,14 +50,14 @@ export const EditLineItem: React.FC<DefaultWorkspaceProps & { bill: MappedBill; 
 
   const onSubmit: SubmitHandler<FormData> = ({ quantity }) => {
     const lineItemToBeEdited = {
-      item: lineItem.uuid,
+      item: processBillItem(lineItem),
       quantity: parseInt(quantity),
       price: lineItem.price,
       priceName: lineItem.priceName,
       priceUuid: lineItem.priceUuid,
       lineItemOrder: lineItem.lineItemOrder,
-      paymentStatus: 'ADJUSTED',
-      billableService: lineItem.billableService.split(':').at(0),
+      paymentStatus: PaymentStatus.ADJUSTED,
+      billableService: processBillItem(lineItem),
     };
 
     const billWithRefund = {

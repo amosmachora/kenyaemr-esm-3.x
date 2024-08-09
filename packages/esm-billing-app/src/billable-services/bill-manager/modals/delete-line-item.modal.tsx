@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { ModalHeader, ModalBody, ModalFooter, Button, Loading } from '@carbon/react';
 import styles from './line-item-modals.scss';
-import { LineItem, MappedBill } from '../../../types';
-import { processBillItems } from '../../../billing.resource';
+import { LineItem, MappedBill, PaymentStatus } from '../../../types';
+import { processBillItems, processBillPayment } from '../../../billing.resource';
 import { showSnackbar } from '@openmrs/esm-framework';
 import { mutate } from 'swr';
 import { useTranslation } from 'react-i18next';
+import { processBillItem } from '../../../utils';
 
 export const DeleteLineItem: React.FC<{
   onClose: () => void;
@@ -17,28 +18,33 @@ export const DeleteLineItem: React.FC<{
 
   const deleteLineItem = () => {
     const lineItemToBeDeleted = {
-      item: lineItem.item,
-      quantity: lineItem.quantity,
-      price: lineItem.price,
-      priceName: lineItem.priceName,
-      priceUuid: lineItem.priceUuid,
-      lineItemOrder: lineItem.lineItemOrder,
-      billableService: lineItem.billableService.split(':').at(0),
-      paymentStatus: 'CANCELLED', //TODO use PaymentStatus
+      ...lineItem,
+      billableService: processBillItem(lineItem),
+      item: processBillItem(lineItem),
+      paymentStatus: PaymentStatus.CANCELLED,
       voidReason: 'Client deleted this line item',
       voided: true,
     };
 
-    const billWithRefund = {
+    const otherLineItems = bill.lineItems.filter((li) => li.uuid !== lineItem.uuid);
+
+    const billWithDeletedLineItem = {
       cashPoint: bill.cashPointUuid,
       cashier: bill.cashier.uuid,
-      lineItems: [lineItemToBeDeleted],
-      payments: bill.payments,
+      lineItems: [lineItemToBeDeleted].filter((li) => li.billableService), //...otherLineItems,
+      payments: bill.payments.map((payment) => {
+        return {
+          amount: payment.amount,
+          amountTendered: payment.amountTendered,
+          attributes: payment.attributes,
+          instanceType: payment.instanceType.uuid,
+        };
+      }),
       patient: bill.patientUuid,
-      status: bill.status,
     };
+
     setIsLoading(true);
-    processBillItems(billWithRefund)
+    processBillPayment(billWithDeletedLineItem, bill.uuid)
       .then(() => {
         mutate((key) => typeof key === 'string' && key.startsWith('/ws/rest/v1/cashier/bill'), undefined, {
           revalidate: true,

@@ -21,7 +21,7 @@ import ImagingOrder from './billable-services/billiable-item/test-order/imaging-
 import { DeleteLineItem } from './billable-services/bill-manager/modals/delete-line-item.modal';
 import { WaiveBillForm } from './billable-services/bill-manager/workspaces/waive-bill-form.workspace';
 import { EditLineItem } from './billable-services/bill-manager/workspaces/edit-line-item.workspace';
-import { RefundBillModal } from './billable-services/bill-manager/modals/refund-bill.modal';
+import { RefundLineItem } from './billable-services/bill-manager/modals/refund-line-item.modal';
 
 const moduleName = '@kenyaemr/esm-billing-app';
 
@@ -65,11 +65,11 @@ export const testOrderAction = getSyncLifecycle(TestOrderAction, options);
 
 // bill manager modals
 export const deleteLineItemModal = getSyncLifecycle(DeleteLineItem, options);
+export const refundLineItemModal = getSyncLifecycle(RefundLineItem, options);
 
-// bill manager extensions
+// bill manager workspaces
 export const waiveBillForm = getSyncLifecycle(WaiveBillForm, options);
 export const editLineItem = getSyncLifecycle(EditLineItem, options);
-export const refundBillModal = getSyncLifecycle(RefundBillModal, options);
 
 export function startupApp() {
   defineConfigSchema(moduleName, configSchema);

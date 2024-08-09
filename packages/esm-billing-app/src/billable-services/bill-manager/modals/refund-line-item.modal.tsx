@@ -6,6 +6,7 @@ import { showSnackbar } from '@openmrs/esm-framework';
 import { processBillItems } from '../../../billing.resource';
 import { mutate } from 'swr';
 import { LineItem, MappedBill, PaymentStatus } from '../../../types';
+import { processBillItem } from '../../../utils';
 
 export const RefundLineItem: React.FC<{
   onClose: () => void;
@@ -17,14 +18,14 @@ export const RefundLineItem: React.FC<{
 
   const refundLineItem = () => {
     const lineItemToBeRefunded = {
-      item: lineItem.uuid,
+      item: processBillItem(lineItem),
       quantity: lineItem.quantity,
       price: -lineItem.price,
       priceName: lineItem.priceName,
       priceUuid: lineItem.priceUuid,
       lineItemOrder: lineItem.lineItemOrder,
       paymentStatus: PaymentStatus.CREDITED,
-      billableService: lineItem.billableService.split(':').at(0),
+      billableService: processBillItem(lineItem),
     };
 
     const billWithRefund = {
@@ -37,7 +38,6 @@ export const RefundLineItem: React.FC<{
     };
 
     setIsLoading(true);
-    onClose();
     processBillItems(billWithRefund)
       .then(() => {
         mutate((key) => typeof key === 'string' && key.startsWith('/ws/rest/v1/cashier/bill'), undefined, {
@@ -53,7 +53,10 @@ export const RefundLineItem: React.FC<{
       .catch((error) => {
         showSnackbar({ title: 'An error occurred trying to refund item', kind: 'error', subtitle: error.message });
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        onClose();
+        setIsLoading(false);
+      });
   };
 
   return (

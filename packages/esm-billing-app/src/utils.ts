@@ -35,7 +35,7 @@ export const createBillWaiverPayload = (
   return processedPayment;
 };
 
-const processBillItem = (item) => (item.item || item.billableService)?.split(':')[0];
+export const processBillItem = (item: LineItem) => (item.item || item.billableService)?.split(':')[0];
 
 function extractMessage(input: string): string | null {
   const parts = input?.split('=>');
