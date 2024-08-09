@@ -83,12 +83,10 @@ const LineItemRow = ({ lineItem, bill }: { lineItem: LineItem; bill: MappedBill 
       <StructuredListCell>
         <OverflowMenu aria-label="overflow-menu">
           <OverflowMenuItem itemText="Edit Item" onClick={() => handleOpenEditLineItemWorkspace(lineItem)} />
-          <OverflowMenuItem itemText="Refund Item" onClick={() => handleOpenRefundLineItemModal(lineItem)} />
-          <OverflowMenuItem itemText="Delete Item" onClick={handleOpenDeleteLineItemModal} />
-          {/* {isPaid && (
+          {isPaid && (
             <OverflowMenuItem itemText="Refund Item" onClick={() => handleOpenRefundLineItemModal(lineItem)} />
-          )} */}
-          {/* {isPaid && <OverflowMenuItem itemText="Delete Item" onClick={handleOpenDeleteLineItemModal} />} */}
+          )}
+          {isPaid && <OverflowMenuItem itemText="Delete Item" onClick={handleOpenDeleteLineItemModal} />}
         </OverflowMenu>
       </StructuredListCell>
     </StructuredListRow>
