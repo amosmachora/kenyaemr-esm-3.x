@@ -97,6 +97,7 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
               kind={notification.type}
               title={notification.message}
               onCloseButtonClick={() => setNotification(null)}
+              data-testid="mpesaErrorNotification"
             />
           )}
           {isLoadingPhoneNumber ? (
@@ -115,6 +116,7 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
                       placeholder={t('Phone Number', 'Phone Number')}
                       invalid={!!errors.phoneNumber}
                       invalidText={errors.phoneNumber?.message}
+                      data-testid="phoneNumberInput"
                     />
                   </Layer>
                 )}
@@ -134,6 +136,7 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
                     placeholder={t('billAmount', 'Bill Amount')}
                     invalid={!!errors.billAmount}
                     invalidText={errors.billAmount?.message}
+                    data-testid="amountInput"
                   />
                 </Layer>
               )}
@@ -147,7 +150,8 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
               type="submit"
               className={styles.button}
               onClick={handleSubmit(onSubmit)}
-              disabled={!isValid || isLoading || requestStatus === 'INITIATED'}>
+              disabled={!isValid || isLoading || requestStatus === 'INITIATED'}
+              data-testid="submitButton">
               {isLoading ? (
                 <>
                   <Loading className={styles.button_spinner} withOverlay={false} small />{' '}

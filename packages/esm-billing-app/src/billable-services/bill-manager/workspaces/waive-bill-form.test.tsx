@@ -1,10 +1,10 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { processBillPayment, usePaymentModes } from '../../../billing.resource';
-import { WaiveBillForm } from './waive-bill-form.workspace';
-import userEvent from '@testing-library/user-event';
-import { MappedBill } from '../../../types';
 import { closeWorkspace, showSnackbar } from '@openmrs/esm-framework';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import React from 'react';
+import { processBillPayment, usePaymentModes } from '../../../billing.resource';
+import { MappedBill } from '../../../types';
+import { WaiveBillForm } from './waive-bill-form.workspace';
 
 const mockedUsePaymentModes = usePaymentModes as jest.MockedFunction<typeof usePaymentModes>;
 const mockProcessBillPayment = processBillPayment as jest.MockedFunction<typeof processBillPayment>;
@@ -14,11 +14,6 @@ const mockShowSnackbar = showSnackbar as jest.MockedFunction<typeof showSnackbar
 jest.mock('../../../billing.resource', () => ({
   processBillPayment: jest.fn(),
   usePaymentModes: jest.fn(),
-}));
-
-jest.mock('@openmrs/esm-framework', () => ({
-  closeWorkspace: jest.fn(),
-  showSnackbar: jest.fn(),
 }));
 
 const mockedBill: MappedBill = {

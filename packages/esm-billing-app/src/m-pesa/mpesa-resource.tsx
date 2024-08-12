@@ -6,14 +6,19 @@ readableStatusMap.set('FAILED', 'Failed');
 readableStatusMap.set('INITIATED', 'Waiting for user...');
 readableStatusMap.set('NOT-FOUND', 'Request not found');
 
+type Payload = {
+  PhoneNumber: string;
+  Amount: string;
+  AccountReference: string;
+};
+
 export const initiateStkPush = async (
-  payload,
+  payload: Payload,
   setNotification: (notification: { type: 'error' | 'success'; message: string }) => void,
   MPESA_PAYMENT_API_BASE_URL: string,
-): Promise<string> => {
+): Promise<string | undefined> => {
   try {
     const url = `${MPESA_PAYMENT_API_BASE_URL}/api/mpesa/stk-push`;
-
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -42,7 +47,7 @@ export const initiateStkPush = async (
     }
 
     if (!res.ok) {
-      throw new Error('Unable to initiate Lipa Na Mpesa, please try again later.');
+      throw new Error();
     }
   } catch (err) {
     setNotification({
