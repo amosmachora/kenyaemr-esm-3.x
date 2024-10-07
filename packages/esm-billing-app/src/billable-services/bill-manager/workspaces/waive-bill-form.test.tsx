@@ -16,7 +16,7 @@ jest.mock('../../../billing.resource', () => ({
   usePaymentModes: jest.fn(),
 }));
 
-const mockedBill: MappedBill = {
+export const mockedBill: MappedBill = {
   id: 1909,
   uuid: '45143fae-b83d-4768-ada5-621e8dc1229d',
   patientName: ' Test Patient',

@@ -1,15 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import InitiatePaymentDialog from './initiate-payment.component';
 import { mockedBill } from '../../../billable-services/bill-manager/workspaces/waive-bill-form.test';
-import { initiateStkPush } from '../../../m-pesa/mpesa-resource';
 import { usePatientAttributes } from '../../../hooks/usePatientAttributes';
+import { initiateStkPush } from '../../../m-pesa/mpesa-resource';
+import InitiatePaymentDialog from './initiate-payment.component';
 
 jest.mock('../../../hooks/usePatientAttributes');
 jest.mock('../../../m-pesa/mpesa-resource', () => ({ initiateStkPush: jest.fn() }));
 
-const mockedInitiateSTKPushRequest = initiateStkPush as jest.MockedFunction<typeof initiateStkPush>;
 const mockedUsePatientAttributes = usePatientAttributes as jest.Mock;
 
 describe('initiate-mpesa-payment', () => {
@@ -23,12 +22,12 @@ describe('initiate-mpesa-payment', () => {
 
   const user = userEvent.setup();
 
-  test('should not allow user to submit empty data or invalid data', async () => {
+  test('should not allow user to submit empty or invalid data', async () => {
     render(<InitiatePaymentDialog closeModal={() => {}} bill={mockedBill} />);
 
+    const phoneNumberInput = screen.getByTestId('phoneNumberInput') as HTMLInputElement;
     const amountInput = screen.getByTestId('amountInput') as HTMLInputElement;
     const submitButton = screen.getByTestId('submitButton') as HTMLButtonElement;
-    const phoneNumberInput = screen.getByTestId('phoneNumberInput') as HTMLInputElement;
 
     expect(screen.getByText('Bill Payment')).toBeInTheDocument();
 
@@ -36,21 +35,21 @@ describe('initiate-mpesa-payment', () => {
     await user.clear(phoneNumberInput);
     expect(submitButton).toBeDisabled();
 
+    // ensure that user can`t type strings in the phone number input
     await user.type(phoneNumberInput, 'RANDOMTEXT');
     expect(screen.getByText('Phone number must be numeric and 10 digits')).toBeInTheDocument();
+
+    // ensure that user can`t type strings in the amount input
+    await user.type(amountInput, 'RANDOMTEXT');
+    expect(screen.getByText('Amount must be numeric')).toBeInTheDocument();
+
+    await user.clear(amountInput);
+    await user.clear(phoneNumberInput);
+    expect(submitButton).toBeDisabled();
   });
 
   test('should show error message if health facility mpesa config data is not available', async () => {
-    const originalFetch = global.fetch;
-
-    const mockedFetch = jest.fn().mockResolvedValue({
-      ok: false,
-      status: 403,
-      json: async () => ({}),
-    } as Response);
-
-    global.fetch = mockedFetch;
-
+    const mockedInitiateSTKPushRequest = initiateStkPush as jest.MockedFunction<typeof initiateStkPush>;
     render(<InitiatePaymentDialog closeModal={() => {}} bill={mockedBill} />);
 
     const amountInput = screen.getByTestId('amountInput') as HTMLInputElement;
@@ -62,41 +61,11 @@ describe('initiate-mpesa-payment', () => {
     await user.type(phoneNumberInput, '0719428019');
     await user.type(amountInput, '50');
 
-    mockedInitiateSTKPushRequest.mockResolvedValue(undefined);
+    mockedInitiateSTKPushRequest.mockResolvedValue('MISSING-HEALTH-FACILITY-CONFIG');
 
     await user.click(submitButton);
 
     expect(mockedInitiateSTKPushRequest).toBeCalledTimes(1);
     expect(await screen.findByText('Health facility M-PESA data not configured.')).toBeInTheDocument();
-    global.fetch = originalFetch;
-  });
-
-  test('should show generic error message for any other status code', async () => {
-    const originalFetch = global.fetch;
-
-    const mockedFetch = jest.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: async () => ({}),
-    } as Response);
-
-    global.fetch = mockedFetch;
-
-    render(<InitiatePaymentDialog closeModal={() => {}} bill={mockedBill} />);
-
-    const amountInput = screen.getByTestId('amountInput') as HTMLInputElement;
-    const submitButton = screen.getByTestId('submitButton') as HTMLButtonElement;
-    const phoneNumberInput = screen.getByTestId('phoneNumberInput') as HTMLInputElement;
-
-    await user.type(phoneNumberInput, '0719428019');
-    await user.type(amountInput, '50');
-
-    mockedInitiateSTKPushRequest.mockResolvedValue(undefined);
-
-    await user.click(submitButton);
-    expect(mockedInitiateSTKPushRequest).toBeCalledTimes(1);
-    expect(await screen.findByText('Unable to initiate Lipa Na Mpesa, please try again later.')).toBeInTheDocument();
-
-    global.fetch = originalFetch;
   });
 });

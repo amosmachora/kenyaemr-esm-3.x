@@ -1,4 +1,5 @@
-import { RequestStatus } from '../types';
+import { processBillItem } from '../invoice/payments/utils';
+import { LineItem, MappedBill, PaymentStatus, RequestStatus } from '../types';
 
 export const readableStatusMap = new Map<RequestStatus, string>();
 readableStatusMap.set('COMPLETE', 'Complete');
@@ -14,46 +15,32 @@ type Payload = {
 
 export const initiateStkPush = async (
   payload: Payload,
-  setNotification: (notification: { type: 'error' | 'success'; message: string }) => void,
   MPESA_PAYMENT_API_BASE_URL: string,
-): Promise<string | undefined> => {
-  try {
-    const url = `${MPESA_PAYMENT_API_BASE_URL}/api/mpesa/stk-push`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        phoneNumber: payload.PhoneNumber,
-        amount: payload.Amount,
-        accountReference: payload.AccountReference,
-      }),
-    });
+): Promise<string | undefined | 'MISSING-HEALTH-FACILITY-CONFIG'> => {
+  const url = `${MPESA_PAYMENT_API_BASE_URL}/api/mpesa/stk-push`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      phoneNumber: payload.PhoneNumber,
+      amount: payload.Amount,
+      accountReference: payload.AccountReference,
+    }),
+  });
 
-    if (res.ok) {
-      const response: { requestId: string } = await res.json();
-      setNotification({ message: 'STK Push sent successfully', type: 'success' });
-      return response.requestId;
-    }
+  if (res.ok) {
+    const response: { requestId: string } = await res.json();
+    return response.requestId;
+  }
 
-    if (!res.ok && res.status === 403) {
-      setNotification({
-        message: 'Health facility M-PESA data not configured.',
-        type: 'error',
-      });
+  if (!res.ok && res.status === 403) {
+    return 'MISSING-HEALTH-FACILITY-CONFIG';
+  }
 
-      return;
-    }
-
-    if (!res.ok) {
-      throw new Error();
-    }
-  } catch (err) {
-    setNotification({
-      message: 'Unable to initiate Lipa Na Mpesa, please try again later.',
-      type: 'error',
-    });
+  if (!res.ok) {
+    throw new Error();
   }
 };
 
@@ -91,4 +78,67 @@ export const getErrorMessage = (err: { message: string }, t) => {
   }
 
   return t('unKnownErrorMsg', 'An unknown error occurred');
+};
+
+export const createMobileMoneyPaymentPayload = (
+  bill: MappedBill,
+  amount: number,
+  mobileMoneyInstanceTypeUUID: string,
+) => {
+  const { cashier } = bill;
+  const totalAmount = bill?.totalAmount;
+  const amountDue = Number(bill.totalAmount) - (Number(bill.tenderedAmount) + amount);
+  const paymentStatus = amountDue <= 0 ? PaymentStatus.PAID : PaymentStatus.PENDING;
+
+  const previousPayments = bill.payments.map((payment) => ({
+    amount: payment.amount,
+    amountTendered: payment.amountTendered,
+    attributes: [],
+    instanceType: payment.instanceType.uuid,
+  }));
+
+  const newPayment = {
+    amount: parseFloat(totalAmount.toFixed(2)),
+    amountTendered: parseFloat(amount.toFixed(2)),
+    attributes: [],
+    instanceType: mobileMoneyInstanceTypeUUID,
+  };
+
+  const updatedPayments = [...previousPayments, newPayment];
+
+  const updatedLineItems: LineItem[] = [];
+
+  let remainder = amount;
+
+  for (let i = 0; i < bill.lineItems.length; i++) {
+    const lineItem = bill.lineItems[i];
+    const totalLineItemAmount = lineItem.price * lineItem.quantity;
+    const newLineItem: LineItem = {
+      ...lineItem,
+      billableService: processBillItem(lineItem),
+      item: processBillItem(lineItem),
+    };
+
+    if (remainder >= totalLineItemAmount) {
+      remainder -= totalLineItemAmount;
+      updatedLineItems.push({ ...newLineItem, paymentStatus: PaymentStatus.PAID });
+    } else {
+      updatedLineItems.push(newLineItem);
+    }
+  }
+
+  const newBillPaymentStatus = updatedLineItems.some((item) => item.paymentStatus === PaymentStatus.PENDING)
+    ? PaymentStatus.PENDING
+    : PaymentStatus.PAID;
+
+  const processedPayment = {
+    cashPoint: bill.cashPointUuid,
+    cashier: cashier.uuid,
+    lineItems: updatedLineItems,
+    payments: updatedPayments,
+    patient: bill.patientUuid,
+    status: updatedLineItems.length > 0 ? newBillPaymentStatus : paymentStatus,
+  };
+
+  return processedPayment;
 };

@@ -1,35 +1,42 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   Button,
   Form,
+  InlineNotification,
+  Layer,
+  Loading,
   ModalBody,
   ModalHeader,
-  TextInput,
-  Layer,
-  InlineNotification,
-  Loading,
   NumberInputSkeleton,
+  TextInput,
 } from '@carbon/react';
-import styles from './initiate-payment.scss';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
-import { MappedBill } from '../../../types';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { formatPhoneNumber } from '../utils';
-import { useSystemSetting } from '../../../hooks/getMflCode';
-import { initiateStkPush } from '../../../m-pesa/mpesa-resource';
-import { useRequestStatus } from '../../../hooks/useRequestStatus';
-import { useConfig } from '@openmrs/esm-framework';
+import { showSnackbar, useConfig } from '@openmrs/esm-framework';
+import React, { useEffect, useState } from 'react';
+import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { mutate } from 'swr';
+import { z } from 'zod';
+import { processBillPayment } from '../../../billing.resource';
 import { BillingConfig } from '../../../config-schema';
+import { useSystemSetting } from '../../../hooks/getMflCode';
 import { usePatientAttributes } from '../../../hooks/usePatientAttributes';
+import { useRequestStatus } from '../../../hooks/useRequestStatus';
+import { createMobileMoneyPaymentPayload, initiateStkPush, readableStatusMap } from '../../../m-pesa/mpesa-resource';
+import { MappedBill } from '../../../types';
+import { extractErrorMessagesFromResponse, waitForASecond } from '../../../utils';
+import { usePaymentModes } from '../payments.resource';
+import { formatPhoneNumber } from '../utils';
+import styles from './initiate-payment.scss';
 
 const initiatePaymentSchema = z.object({
   phoneNumber: z
     .string()
     .nonempty({ message: 'Phone number is required' })
     .regex(/^\d{10}$/, { message: 'Phone number must be numeric and 10 digits' }),
-  billAmount: z.string().nonempty({ message: 'Amount is required' }),
+  billAmount: z
+    .string()
+    .nonempty({ message: 'Amount is required' })
+    .regex(/^\d+(\.\d+)?$/, { message: 'Amount must be numeric' }),
 });
 
 type FormData = z.infer<typeof initiatePaymentSchema>;
@@ -46,7 +53,10 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
   const { mflCodeValue } = useSystemSetting('facility.mflcode');
   const [notification, setNotification] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [{ requestStatus }, pollingTrigger] = useRequestStatus(setNotification, closeModal, bill);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const requestStatus = useRequestStatus(requestId);
+  const { paymentModes } = usePaymentModes();
+  const mobileMoneyPaymentMethodInstanceTypeUUID = paymentModes.find((method) => method.name === 'Mobile Money').uuid;
 
   const {
     control,
@@ -62,12 +72,61 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
   });
 
   const watchedPhoneNumber = watch('phoneNumber');
+  const watchedAmount = watch('billAmount');
 
   useEffect(() => {
     if (!watchedPhoneNumber && phoneNumber) {
       reset({ phoneNumber: watchedPhoneNumber });
     }
   }, [watchedPhoneNumber, setValue, phoneNumber, reset]);
+
+  useEffect(() => {
+    if (!requestStatus) {
+      return;
+    }
+    if (requestStatus === 'INITIATED') {
+      setNotification({ type: 'success', message: readableStatusMap.get(requestStatus) });
+    }
+
+    if (requestStatus === 'FAILED' || requestStatus === 'NOT-FOUND') {
+      setNotification({ type: 'error', message: readableStatusMap.get(requestStatus) });
+    }
+
+    if (requestStatus === 'COMPLETE') {
+      const mobileMoneyPayload = createMobileMoneyPaymentPayload(
+        bill,
+        parseInt(watchedAmount),
+        mobileMoneyPaymentMethodInstanceTypeUUID,
+      );
+
+      processBillPayment(mobileMoneyPayload, bill.uuid).then(
+        () => {
+          showSnackbar({
+            title: t('billPayment', 'Bill payment'),
+            subtitle: 'Bill payment processing has been successful',
+            kind: 'success',
+            timeoutInMs: 3000,
+          });
+          const url = `/ws/rest/v1/cashier/bill/${bill.uuid}`;
+          mutate((key) => typeof key === 'string' && key.startsWith(url), undefined, { revalidate: true });
+          setNotification({ type: 'success', message: readableStatusMap.get(requestStatus) });
+          waitForASecond().then(() => {
+            closeModal();
+          });
+        },
+        (error) => {
+          showSnackbar({
+            title: t('failedBillPayment', 'Bill payment failed'),
+            subtitle: `An unexpected error occurred while processing your bill payment. Please contact the system administrator and provide them with the following error details: ${extractErrorMessagesFromResponse(
+              error.responseBody,
+            )}`,
+            kind: 'error',
+            timeoutInMs: 3000,
+          });
+        },
+      );
+    }
+  }, [bill, closeModal, mobileMoneyPaymentMethodInstanceTypeUUID, requestStatus, t, watchedAmount]);
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     const phoneNumber = formatPhoneNumber(data.phoneNumber);
@@ -81,9 +140,24 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
     };
 
     setIsLoading(true);
-    const requestId = await initiateStkPush(payload, setNotification, mpesaAPIBaseUrl);
-    pollingTrigger({ requestId, requestStatus: 'INITIATED', amount: amountBilled });
-    setIsLoading(false);
+    try {
+      const res = await initiateStkPush(payload, mpesaAPIBaseUrl);
+      if (res === 'MISSING-HEALTH-FACILITY-CONFIG') {
+        setNotification({
+          message: 'Health facility M-PESA data not configured.',
+          type: 'error',
+        });
+        return;
+      }
+      setRequestId(res);
+    } catch (error) {
+      setNotification({
+        message: 'Unable to initiate Lipa Na Mpesa, please try again later.',
+        type: 'error',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -117,6 +191,7 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
                       invalid={!!errors.phoneNumber}
                       invalidText={errors.phoneNumber?.message}
                       data-testid="phoneNumberInput"
+                      id="phoneNumberInput"
                     />
                   </Layer>
                 )}
@@ -137,6 +212,7 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
                     invalid={!!errors.billAmount}
                     invalidText={errors.billAmount?.message}
                     data-testid="amountInput"
+                    id="amountInput"
                   />
                 </Layer>
               )}
