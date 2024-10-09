@@ -4,20 +4,15 @@ import { BillingConfig } from '../config-schema';
 import { getRequestStatus } from '../m-pesa/mpesa-resource';
 import { RequestStatus } from '../types';
 
-type RequestData = {
-  requestId: string;
-  requestStatus: RequestStatus | null;
-  amount: string | null;
-};
-
 /**
  * useRequestStatus
  * @param requestId the request id of the payment request
  * @returns the request status of the request id.
  */
-export const useRequestStatus = (requestId: string | null): RequestStatus => {
+export const useRequestStatus = (requestId: string | null): { requestStatus: RequestStatus; referenceCode: string } => {
   const { mpesaAPIBaseUrl } = useConfig<BillingConfig>();
   const [requestStatus, setRequestStatus] = useState<RequestStatus | null>(null);
+  const [referenceCode, setReferenceCode] = useState<string | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -29,8 +24,13 @@ export const useRequestStatus = (requestId: string | null): RequestStatus => {
     if (requestId && !['COMPLETE', 'FAILED', 'NOT-FOUND'].includes(requestStatus)) {
       const fetchStatus = async () => {
         try {
-          const status = await getRequestStatus(requestId, mpesaAPIBaseUrl);
+          const { status, referenceCode } = await getRequestStatus(requestId, mpesaAPIBaseUrl);
           setRequestStatus(status);
+
+          if (status === 'COMPLETE') {
+            setReferenceCode(referenceCode);
+          }
+
           if (status === 'FAILED' || status === 'NOT-FOUND' || status === 'COMPLETE') {
             clearInterval(interval);
           }
@@ -45,5 +45,5 @@ export const useRequestStatus = (requestId: string | null): RequestStatus => {
     }
   }, [mpesaAPIBaseUrl, requestId, requestStatus]);
 
-  return requestStatus;
+  return { requestStatus, referenceCode };
 };

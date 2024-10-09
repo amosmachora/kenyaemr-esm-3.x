@@ -47,7 +47,7 @@ export const initiateStkPush = async (
 export const getRequestStatus = async (
   requestId: string,
   MPESA_PAYMENT_API_BASE_URL: string,
-): Promise<RequestStatus> => {
+): Promise<{ status: RequestStatus; referenceCode?: string }> => {
   const requestResponse = await fetch(`${MPESA_PAYMENT_API_BASE_URL}/api/mpesa/check-payment-state`, {
     method: 'POST',
     headers: {
@@ -67,9 +67,9 @@ export const getRequestStatus = async (
     throw error;
   }
 
-  const requestStatus: { status: RequestStatus } = await requestResponse.json();
+  const requestStatus: { status: RequestStatus; referenceCode?: string } = await requestResponse.json();
 
-  return requestStatus.status;
+  return requestStatus;
 };
 
 export const getErrorMessage = (err: { message: string }, t) => {
@@ -84,31 +84,42 @@ export const createMobileMoneyPaymentPayload = (
   bill: MappedBill,
   amount: number,
   mobileMoneyInstanceTypeUUID: string,
+  paymentReference: { uuid: string; value: string },
 ) => {
   const { cashier } = bill;
   const totalAmount = bill?.totalAmount;
-  const amountDue = Number(bill.totalAmount) - (Number(bill.tenderedAmount) + amount);
+  const tenderedAmount = Number(bill.tenderedAmount);
+  const amountDue = Number(bill.totalAmount) - (tenderedAmount + amount);
   const paymentStatus = amountDue <= 0 ? PaymentStatus.PAID : PaymentStatus.PENDING;
 
   const previousPayments = bill.payments.map((payment) => ({
     amount: payment.amount,
     amountTendered: payment.amountTendered,
-    attributes: [],
+    attributes: payment.attributes.map((att) => {
+      return {
+        attributeType: att.attributeType.uuid,
+        value: att.value,
+      };
+    }),
     instanceType: payment.instanceType.uuid,
   }));
 
   const newPayment = {
     amount: parseFloat(totalAmount.toFixed(2)),
     amountTendered: parseFloat(amount.toFixed(2)),
-    attributes: [],
+    attributes: [
+      {
+        attributeType: paymentReference.uuid,
+        value: paymentReference.value,
+      },
+    ],
     instanceType: mobileMoneyInstanceTypeUUID,
   };
 
   const updatedPayments = [...previousPayments, newPayment];
-
   const updatedLineItems: LineItem[] = [];
 
-  let remainder = amount;
+  let remainingPayment = tenderedAmount + amount;
 
   for (let i = 0; i < bill.lineItems.length; i++) {
     const lineItem = bill.lineItems[i];
@@ -119,8 +130,8 @@ export const createMobileMoneyPaymentPayload = (
       item: processBillItem(lineItem),
     };
 
-    if (remainder >= totalLineItemAmount) {
-      remainder -= totalLineItemAmount;
+    if (remainingPayment >= totalLineItemAmount) {
+      remainingPayment -= totalLineItemAmount;
       updatedLineItems.push({ ...newLineItem, paymentStatus: PaymentStatus.PAID });
     } else {
       updatedLineItems.push(newLineItem);

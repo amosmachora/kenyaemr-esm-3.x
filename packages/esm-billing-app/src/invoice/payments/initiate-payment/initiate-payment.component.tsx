@@ -54,9 +54,14 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
   const [notification, setNotification] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
-  const requestStatus = useRequestStatus(requestId);
+  const { requestStatus, referenceCode } = useRequestStatus(requestId);
   const { paymentModes } = usePaymentModes();
   const mobileMoneyPaymentMethodInstanceTypeUUID = paymentModes.find((method) => method.name === 'Mobile Money').uuid;
+  const paymentReferenceUUID = paymentModes
+    .find((mode) => mode.name === 'Mobile Money')
+    ?.attributeTypes.find((type) => type.description === 'Reference Number').uuid;
+
+  const pendingAmount = bill.totalAmount - bill.tenderedAmount;
 
   const {
     control,
@@ -67,7 +72,10 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
     reset,
   } = useForm<FormData>({
     mode: 'all',
-    defaultValues: { billAmount: String(bill.totalAmount), phoneNumber: phoneNumber },
+    defaultValues: {
+      billAmount: pendingAmount.toString(),
+      phoneNumber: phoneNumber,
+    },
     resolver: zodResolver(initiatePaymentSchema),
   });
 
@@ -97,6 +105,7 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
         bill,
         parseInt(watchedAmount),
         mobileMoneyPaymentMethodInstanceTypeUUID,
+        { uuid: paymentReferenceUUID, value: referenceCode },
       );
 
       processBillPayment(mobileMoneyPayload, bill.uuid).then(
@@ -126,7 +135,16 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
         },
       );
     }
-  }, [bill, closeModal, mobileMoneyPaymentMethodInstanceTypeUUID, requestStatus, t, watchedAmount]);
+  }, [
+    bill,
+    closeModal,
+    mobileMoneyPaymentMethodInstanceTypeUUID,
+    paymentReferenceUUID,
+    referenceCode,
+    requestStatus,
+    t,
+    watchedAmount,
+  ]);
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     const phoneNumber = formatPhoneNumber(data.phoneNumber);

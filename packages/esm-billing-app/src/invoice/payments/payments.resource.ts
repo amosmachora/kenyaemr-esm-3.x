@@ -1,13 +1,7 @@
-import useSWR from 'swr';
 import { openmrsFetch, useConfig } from '@openmrs/esm-framework';
+import useSWR from 'swr';
 import { BillingConfig } from '../../config-schema';
-
-type PaymentMethod = {
-  uuid: string;
-  description: string;
-  name: string;
-  retired: boolean;
-};
+import { PaymentMethod } from '../../types';
 
 const swrOption = {
   errorRetryCount: 2,
