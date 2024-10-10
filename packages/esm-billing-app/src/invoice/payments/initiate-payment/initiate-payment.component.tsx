@@ -56,10 +56,10 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
   const [requestId, setRequestId] = useState<string | null>(null);
   const { requestStatus, referenceCode } = useRequestStatus(requestId);
   const { paymentModes } = usePaymentModes();
-  const mobileMoneyPaymentMethodInstanceTypeUUID = paymentModes.find((method) => method.name === 'Mobile Money').uuid;
+  const mobileMoneyPaymentMethodInstanceTypeUUID = paymentModes?.find((method) => method.name === 'Mobile Money')?.uuid;
   const paymentReferenceUUID = paymentModes
-    .find((mode) => mode.name === 'Mobile Money')
-    ?.attributeTypes.find((type) => type.description === 'Reference Number').uuid;
+    ?.find((mode) => mode.name === 'Mobile Money')
+    ?.attributeTypes?.find((type) => type.description === 'Reference Number').uuid;
 
   const pendingAmount = bill.totalAmount - bill.tenderedAmount;
 
@@ -244,7 +244,7 @@ const InitiatePaymentDialog: React.FC<InitiatePaymentDialogProps> = ({ closeModa
               type="submit"
               className={styles.button}
               onClick={handleSubmit(onSubmit)}
-              disabled={!isValid || isLoading || requestStatus === 'INITIATED'}
+              disabled={!isValid || isLoading || (requestStatus && requestStatus !== 'COMPLETE')}
               data-testid="submitButton">
               {isLoading ? (
                 <>

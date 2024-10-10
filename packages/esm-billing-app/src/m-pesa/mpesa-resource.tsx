@@ -7,7 +7,7 @@ readableStatusMap.set('FAILED', 'Failed');
 readableStatusMap.set('INITIATED', 'Waiting for user...');
 readableStatusMap.set('NOT-FOUND', 'Request not found');
 
-type Payload = {
+export type Payload = {
   PhoneNumber: string;
   Amount: string;
   AccountReference: string;

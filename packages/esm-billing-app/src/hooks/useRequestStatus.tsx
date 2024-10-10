@@ -7,9 +7,11 @@ import { RequestStatus } from '../types';
 /**
  * useRequestStatus
  * @param requestId the request id of the payment request
- * @returns the request status of the request id.
+ * @returns the request status of the request id and a reference code if the request is successful.
  */
-export const useRequestStatus = (requestId: string | null): { requestStatus: RequestStatus; referenceCode: string } => {
+export const useRequestStatus = (
+  requestId: string | null,
+): { requestStatus: RequestStatus | null; referenceCode: string | null } => {
   const { mpesaAPIBaseUrl } = useConfig<BillingConfig>();
   const [requestStatus, setRequestStatus] = useState<RequestStatus | null>(null);
   const [referenceCode, setReferenceCode] = useState<string | null>(null);
