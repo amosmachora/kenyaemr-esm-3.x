@@ -195,6 +195,11 @@
       "component": "claimsOverview",
       "name": "claims-overview-dashboard-link",
       "slot": "claims-management-overview-slot"
+    },
+    {
+      "name": "super-navigation-launcher",
+      "component": "superNavigationModalLauncher",
+      "slot": "top-nav-actions-slot"
     }
   ],
   "workspaces": [

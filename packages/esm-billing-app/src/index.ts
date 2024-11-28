@@ -1,9 +1,14 @@
 import { defineConfigSchema, getSyncLifecycle, registerFeatureFlag } from '@openmrs/esm-framework';
 import { createDashboardGroup, createDashboardLink } from '@openmrs/esm-patient-common-lib';
+import { SuperNavigationLauncher } from './app-like-ui/navigation-launcher';
 import BenefitsPackage from './benefits-package/benefits-package.component';
+import Benefits from './benefits-package/benefits/benefits.component';
 import BenefitPreAuthForm from './benefits-package/forms/benefit-pre-auth-form.workspace';
 import BillHistory from './bill-history/bill-history.component';
+import { DeleteBillModal } from './billable-services/bill-manager/modals/delete-bill.modal';
 import { RefundBillModal } from './billable-services/bill-manager/modals/refund-bill.modal';
+import { DeleteBillableServiceModal } from './billable-services/bill-manager/modals/serviceItemCard.component';
+import CancelBillWorkspace from './billable-services/bill-manager/workspaces/cancel-bill/cancel-bill.workspace';
 import { EditBillForm } from './billable-services/bill-manager/workspaces/edit-bill/edit-bill-form.workspace';
 import { WaiveBillForm } from './billable-services/bill-manager/workspaces/waive-bill/waive-bill-form.workspace';
 import CommodityForm from './billable-services/billables/commodity/commodity-form.workspace';
@@ -23,19 +28,15 @@ import { configSchema } from './config-schema';
 import { benefitsPackageDashboardMeta, dashboardMeta } from './dashboard.meta';
 import InitiatePaymentDialog from './invoice/payments/initiate-payment/initiate-payment.component';
 import VisitAttributeTags from './invoice/payments/visit-tags/visit-attribute.component';
+import ReceiptPrintPreviewModal from './invoice/print-bill-receipt/receipt-print-preview.modal';
 import { createLeftPanelLink } from './left-panel-link.component';
-import RequirePaymentModal from './prompt-payment/prompt-payment-modal.component';
 import DeletePaymentModeModal from './payment-modes/delete-payment-mode.modal';
 import PaymentModeWorkspace from './payment-modes/payment-mode.workspace';
 import { CreatePaymentPoint } from './payment-points/create-payment-point.component';
 import { ClockIn } from './payment-points/payment-point/clock-in.component';
 import { ClockOut } from './payment-points/payment-point/clock-out.component';
+import RequirePaymentModal from './prompt-payment/prompt-payment-modal.component';
 import rootComponent from './root.component';
-import Benefits from './benefits-package/benefits/benefits.component';
-import CancelBillWorkspace from './billable-services/bill-manager/workspaces/cancel-bill/cancel-bill.workspace';
-import { DeleteBillableServiceModal } from './billable-services/bill-manager/modals/serviceItemCard.component';
-import { DeleteBillModal } from './billable-services/bill-manager/modals/delete-bill.modal';
-import ReceiptPrintPreviewModal from './invoice/print-bill-receipt/receipt-print-preview.modal';
 
 const moduleName = '@kenyaemr/esm-billing-app';
 
@@ -194,3 +195,4 @@ export function startupApp() {
 }
 
 export const bulkImportBillableServicesModal = getSyncLifecycle(BulkImportBillableServices, options);
+export const superNavigationModalLauncher = getSyncLifecycle(SuperNavigationLauncher, options);

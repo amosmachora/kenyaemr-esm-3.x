@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import BillManager from './billable-services/bill-manager/bill-manager.component';
 import { ChargeItemsDashboard } from './billable-services/dashboard/dashboard.component';
@@ -16,21 +16,6 @@ import { PaymentPoints } from './payment-points/payment-points.component';
 
 const RootComponent: React.FC = () => {
   const baseName = window.getOpenmrsSpaBase() + 'home/billing';
-
-  useEffect(() => {
-    const allLinks = Array.from(document.querySelectorAll('a'));
-
-    const hrefs = allLinks.map((link) => link.href);
-    // getting the sidebar
-    const homesidebar = document.querySelector('[data-extension-slot-name="home-sidebar-slot"]');
-
-    if (homesidebar) {
-      homesidebar.remove();
-    }
-
-    const firstSection = document.querySelector('section');
-    firstSection.style.marginLeft = '0';
-  }, []);
 
   return (
     <BrowserRouter basename={baseName}>
