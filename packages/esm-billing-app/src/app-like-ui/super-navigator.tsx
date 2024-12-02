@@ -1,97 +1,55 @@
 import { CarbonIconType } from '@carbon/react/icons';
 import { KnownRoute } from './known-routes';
 
-export class SuperNavigator {
-  root: SuperNavigatorNode;
+export class SuperNavigatorNode {
+  icon: CarbonIconType;
+  text: string;
+  link: string;
+  children: SuperNavigatorNode[];
 
-  constructor(routes: KnownRoute[]) {
-    const sortedRoutes = routes.sort((a, b) => a.text.length - b.text.length);
-    let baseRouteLink = this.getBaseRoute(sortedRoutes.map((route) => route.link));
-
-    const baseRoute = sortedRoutes.find((route) => route.link === baseRouteLink);
-    this.root = new SuperNavigatorNode({ icon: baseRoute.icon, link: baseRoute.link, text: baseRoute.text });
-
-    sortedRoutes.forEach((route) => {
-      if (route.link !== baseRouteLink) {
-        this.addRouteToTree(this.root, route);
-      }
-    });
-  }
-
-  getBaseRoute(strings: string[]) {
-    if (strings.length === 0) {
-      return '';
-    }
-
-    let baseRoute = strings[0];
-
-    for (let i = 1; i < strings.length; i++) {
-      while (!strings[i].startsWith(baseRoute)) {
-        baseRoute = baseRoute.slice(0, -1);
-        if (baseRoute === '') {
-          return '';
-        }
-      }
-    }
-
-    return baseRoute;
-  }
-
-  addRouteToTree(parent: SuperNavigatorNode, route: KnownRoute) {
-    const childNode = parent.findChild(route.link);
-
-    if (childNode) {
-      this.addRouteToTree(childNode, route);
-    } else if (route.link.startsWith(parent.link)) {
-      const newNode = new SuperNavigatorNode({
-        icon: route.icon,
-        link: route.link,
-        text: route.text,
-      });
-      parent.addChild(newNode);
-    }
-  }
-
-  getRootChildren() {
-    return this.root.children;
+  constructor(icon: CarbonIconType, text: string, link: string) {
+    this.icon = icon;
+    this.text = text;
+    this.link = link;
+    this.children = [];
   }
 }
 
-export class SuperNavigatorNode {
-  link: string;
-  icon: CarbonIconType;
-  text: string;
-  children: SuperNavigatorNode[] = [];
-  parent: SuperNavigatorNode | null = null;
+export class SuperNavigator {
+  root: SuperNavigatorNode = null;
 
-  constructor(data: { link: string; icon: CarbonIconType; text: string }) {
-    this.link = data.link;
-    this.icon = data.icon;
-    this.text = data.text;
+  constructor(routes: KnownRoute[]) {
+    const baseRoute: KnownRoute = routes.sort((routeA, routeB) => routeA.link.length - routeB.link.length).at(0);
+    this.root = new SuperNavigatorNode(baseRoute.icon, baseRoute.text, baseRoute.link);
+
+    const everyOtherKnownRoute = routes.slice(1);
+
+    for (let i = 0; i < everyOtherKnownRoute.length; i++) {
+      const route = everyOtherKnownRoute[i];
+      this.insertRoute(route);
+    }
   }
 
-  findChild(link: string): SuperNavigatorNode | undefined {
-    return this.children.find((child) => link.startsWith(child.link));
-  }
-
-  getSiblings(): Array<SuperNavigatorNode> {
-    if (!this.parent) {
-      return [];
+  findNodeByLink(link: string, root: SuperNavigatorNode): SuperNavigatorNode | null {
+    if (link === root.link) {
+      return root;
     }
 
-    return this.parent.children;
+    for (const child of root.children) {
+      const result = this.findNodeByLink(link, child);
+
+      if (result) {
+        return result;
+      }
+    }
+
+    return null;
   }
 
-  getChildNodes(): Array<SuperNavigatorNode> {
-    return this.children;
-  }
-
-  addChild(node: SuperNavigatorNode) {
-    node.parent = this;
-    this.children.push(node);
-  }
-
-  isLeafNode(): boolean {
-    return this.children.length === 0;
+  insertRoute(route: KnownRoute) {
+    // `${openmrsBase}openmrs/spa/home/providers`
+    const linkWithoutLastPart = route.link.slice(0, route.link.lastIndexOf('/')); // ${openmrsBase}openmrs/spa/home
+    const parent = this.findNodeByLink(linkWithoutLastPart, this.root);
+    parent.children.push(new SuperNavigatorNode(route.icon, route.text, route.link));
   }
 }

@@ -2,6 +2,7 @@ import { HeaderGlobalAction } from '@carbon/react';
 import { Workspace } from '@carbon/react/icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BrowserRouter } from 'react-router-dom';
 import styles from './navigation-launcher.scss';
 import { Navigator } from './navigator';
 
@@ -10,6 +11,7 @@ export const SuperNavigationLauncher = () => {
   const [isShowingNavigator, setIsShowingNavigator] = useState(false);
 
   useEffect(() => {
+    // TODO you can remove the sidebar uing some sidebar configuration
     const homesidebar = document.querySelector('[data-extension-slot-name="home-sidebar-slot"]');
 
     if (homesidebar) {
@@ -41,7 +43,11 @@ export const SuperNavigationLauncher = () => {
 
   return (
     <>
-      {isShowingNavigator && <Navigator />}
+      {isShowingNavigator && (
+        <BrowserRouter>
+          <Navigator closeNavigator={() => setIsShowingNavigator(false)} />
+        </BrowserRouter>
+      )}
       <HeaderGlobalAction
         aria-label={t('superNavigation', 'Super Navigation')}
         enterDelayMs={500}

@@ -1,0 +1,55 @@
+@use '@carbon/layout';
+
+.container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--brand-01);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.linkContainer {
+  width: 80vw;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: layout.$spacing-05;
+
+  div {
+    cursor: pointer;
+  }
+
+  a,
+  div {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #fff;
+    padding: layout.$spacing-05;
+    color: #fff;
+    text-decoration: none;
+
+    svg {
+      height: layout.$spacing-10;
+      width: layout.$spacing-10;
+      margin-bottom: layout.$spacing-05;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .linkContainer {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .linkContainer {
+    grid-template-columns: 1fr;
+  }
+}
