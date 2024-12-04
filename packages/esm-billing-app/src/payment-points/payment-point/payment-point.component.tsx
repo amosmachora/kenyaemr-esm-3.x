@@ -1,8 +1,9 @@
 import React from 'react';
-import BillingHeader from '../../billing-header/billing-header.component';
 import { useParams } from 'react-router-dom';
-import { usePaymentPoints } from '../payment-points.resource';
 import { PaymentHistoryViewer } from '../../billable-services/payment-history/payment-history-viewer.component';
+import BillingHeader from '../../billing-header/billing-header.component';
+import { usePaymentPoints } from '../payment-points.resource';
+import { useClockInStatus } from '../use-clock-in-status';
 
 export const headers = [
   { header: 'Date', key: 'dateCreated' },
@@ -14,6 +15,7 @@ export const headers = [
 export const PaymentPoint = () => {
   const { paymentPointUUID } = useParams();
   const { paymentPoints, isLoading, error } = usePaymentPoints();
+  const { isClockedIn, globalActiveSheet } = useClockInStatus(paymentPointUUID);
 
   const paymentPoint = paymentPoints?.find((point) => point.uuid === paymentPointUUID);
 
