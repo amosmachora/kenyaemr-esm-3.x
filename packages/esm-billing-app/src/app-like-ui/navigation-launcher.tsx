@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 import { HeaderGlobalAction } from '@carbon/react';
 import { Workspace } from '@carbon/react/icons';
-import { getAssignedExtensions } from '@openmrs/esm-framework';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BrowserRouter } from 'react-router-dom';
@@ -11,9 +10,6 @@ import { Navigator } from './navigator';
 export const SuperNavigationLauncher = () => {
   const { t } = useTranslation();
   const [isShowingNavigator, setIsShowingNavigator] = useState(false);
-
-  const assignedExtensions = getAssignedExtensions('homepage-dashboard-slot');
-  console.log('assignedExtensions', assignedExtensions);
 
   useEffect(() => {
     // TODO you can remove the sidebar uing some sidebar configuration

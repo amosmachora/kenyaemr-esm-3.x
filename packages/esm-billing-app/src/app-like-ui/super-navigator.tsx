@@ -1,13 +1,13 @@
 import { CarbonIconType } from '@carbon/react/icons';
-import { KnownRoute } from './known-routes';
+import { Route } from './utils';
 
 export class SuperNavigatorNode {
-  icon: CarbonIconType;
+  icon: CarbonIconType | string;
   text: string;
   link: string;
   children: SuperNavigatorNode[];
 
-  constructor(icon: CarbonIconType, text: string, link: string) {
+  constructor(icon: CarbonIconType | string, text: string, link: string) {
     this.icon = icon;
     this.text = text;
     this.link = link;
@@ -18,14 +18,17 @@ export class SuperNavigatorNode {
 export class SuperNavigator {
   root: SuperNavigatorNode = null;
 
-  constructor(routes: KnownRoute[]) {
-    const baseRoute: KnownRoute = routes.sort((routeA, routeB) => routeA.link.length - routeB.link.length).at(0);
+  constructor(routes: Route[]) {
+    if (routes.length === 0) {
+      return;
+    }
+    const baseRoute: Route = routes.sort((routeA, routeB) => routeA.link.length - routeB.link.length).at(0);
     this.root = new SuperNavigatorNode(baseRoute.icon, baseRoute.text, baseRoute.link);
 
-    const everyOtherKnownRoute = routes.slice(1);
+    const everyOtherRoute = routes.slice(1);
 
-    for (let i = 0; i < everyOtherKnownRoute.length; i++) {
-      const route = everyOtherKnownRoute[i];
+    for (let i = 0; i < everyOtherRoute.length; i++) {
+      const route = everyOtherRoute[i];
       this.insertRoute(route);
     }
   }
@@ -46,7 +49,7 @@ export class SuperNavigator {
     return null;
   }
 
-  insertRoute(route: KnownRoute) {
+  insertRoute(route: Route) {
     // `${openmrsBase}openmrs/spa/home/providers`
     const linkWithoutLastPart = route.link.slice(0, route.link.lastIndexOf('/')); // ${openmrsBase}openmrs/spa/home
     const parent = this.findNodeByLink(linkWithoutLastPart, this.root);

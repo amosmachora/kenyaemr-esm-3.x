@@ -28,9 +28,16 @@ export interface BillingConfig {
     emergencyPriorityConceptUuid: string;
   };
   paymentMethodsUuidsThatShouldNotShowPrompt: Array<string>;
+  extraRouteExtensions: Array<string>;
 }
 
 export const configSchema: ConfigSchema = {
+  extraRouteExtensions: {
+    _type: Type.Array,
+    _description:
+      'This are extra extensions you have created for routing, for example when you create a dashboard group',
+    _default: [],
+  },
   isPDSLFacility: {
     _type: Type.Boolean,
     _description: 'A flag for PDSL facilities',
