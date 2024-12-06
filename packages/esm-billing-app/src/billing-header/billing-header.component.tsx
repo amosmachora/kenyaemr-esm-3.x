@@ -1,6 +1,7 @@
 import { TagSkeleton } from '@carbon/react';
 import { Alarm, Calendar, Location, UserFollow } from '@carbon/react/icons';
 import { formatDate, useSession } from '@openmrs/esm-framework';
+import dayjs from 'dayjs';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useClockInStatus } from '../payment-points/use-clock-in-status';
@@ -31,7 +32,7 @@ const BillingHeader: React.FC<BillingHeaderProps> = ({ title }) => {
               isClockedIn && (
                 <div className={styles.clockInInfo}>
                   <Alarm />
-                  {globalActiveSheet.display}
+                  {`Clocked in since ${dayjs(globalActiveSheet.clockIn).format('YYYY:DD:MM HH:mm')}`}
                 </div>
               )
             )}
