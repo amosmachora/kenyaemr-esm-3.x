@@ -7,11 +7,10 @@ import { SuperNavigator, SuperNavigatorNode } from './super-navigator';
 import { iconsMap, openmrsBase, Route } from './utils';
 
 export const Navigator = ({ closeNavigator }: { closeNavigator: () => void }) => {
-  const { extraRouteExtensions } = useConfig<BillingConfig>();
-  const assignedExtensions = getAssignedExtensions('homepage-dashboard-slot');
-  console.log('assignedExtensions', assignedExtensions);
+  const { extraRoutes, isExclusive } = useConfig<BillingConfig>();
+  const homeLeftNavExtensions = getAssignedExtensions('homepage-dashboard-slot');
 
-  const homePageRoutes: Route[] = assignedExtensions.map((ext) => {
+  const homePageRoutes: Route[] = homeLeftNavExtensions.map((ext) => {
     const extensionMetaName = ext.meta.name.toLowerCase();
 
     const link = extensionMetaName.includes('home')
@@ -24,15 +23,10 @@ export const Navigator = ({ closeNavigator }: { closeNavigator: () => void }) =>
     };
   });
 
-  const extraRoutes = extraRouteExtensions.map((ext) => getAssignedExtensions(ext));
-
-  console.log('routes', homePageRoutes);
-  console.log('extra routes', extraRoutes);
-
   const homeRoutesNavigator = new SuperNavigator([]);
   const [currentOptions, setCurrentOptions] = useState<SuperNavigatorNode[]>([
-    homeRoutesNavigator.root,
-    ...homeRoutesNavigator.root.children,
+    // homeRoutesNavigator.root,
+    // ...homeRoutesNavigator.root.children,
   ]);
 
   // TODO fix bug on clicking routes with children. You currently cannot be redirected to the route

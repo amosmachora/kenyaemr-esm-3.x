@@ -28,14 +28,58 @@ export interface BillingConfig {
     emergencyPriorityConceptUuid: string;
   };
   paymentMethodsUuidsThatShouldNotShowPrompt: Array<string>;
-  extraRouteExtensions: Array<string>;
+  extraRoutes: Array<{ link: string }>;
+  isExclusive: boolean;
+  dashboardGroupSlots: Array<{ link: string }>;
 }
 
 export const configSchema: ConfigSchema = {
-  extraRouteExtensions: {
+  extraRoutes: {
     _type: Type.Array,
-    _description:
-      'This are extra extensions you have created for routing, for example when you create a dashboard group',
+    _description: `This are routes that are not automatically configured by the super navigator`,
+    _default: [],
+    _elements: {
+      link: {
+        _type: Type.String,
+        _description: `The path of the route. An example is openmrs/spa/home/billing/payment-history`,
+      },
+    },
+  },
+  dashboardGroupSlots: {
+    _type: Type.Array,
+    _description: `This is if you use dashboard groups in your implementation. Provide the slot names here for them to be configured correctly`,
+    _default: [],
+    _elements: {
+      slotName: {
+        _type: Type.String,
+        _description: `The dashboard group slot name e.g billing-dashboard-link-slot`,
+      },
+    },
+  },
+  isExclusive: {
+    _type: Type.Boolean,
+    _description: `If you only want to use the super navigator exclusively turn this flag on`,
+    _default: false,
+  },
+  superNavigatorIcons: {
+    _type: Type.Array,
+    _elements: {
+      route: {
+        _type: Type.String,
+        _description: `The route not including the domain. For example 'openmrs/spa/home/providers'`,
+      },
+      carbonIcon: {
+        _type: Type.String,
+        _description: 'The Carbon Icon to use for the said route',
+        _default: undefined,
+      },
+      svgString: {
+        _type: Type.String,
+        _description:
+          'An SVG string to use as the icon for this route. Be sure not to add both an svgString and a carbonIcon. If you add both the svgString will override your carbon icon',
+        _default: undefined,
+      },
+    },
     _default: [],
   },
   isPDSLFacility: {
