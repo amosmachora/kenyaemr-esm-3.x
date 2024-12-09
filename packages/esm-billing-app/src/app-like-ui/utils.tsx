@@ -7,6 +7,7 @@ import {
   QueryQueue,
   WatsonHealthStudyTransfer,
 } from '@carbon/react/icons';
+import { SuperNavigatorIconType } from './super-navigator';
 
 export const openmrsBase = window.getOpenmrsSpaBase();
 
@@ -14,6 +15,7 @@ export type Route = {
   link: string; // this is the full link. openmrs base and everything
   icon: CarbonIconType | string;
   text: string;
+  iconType: SuperNavigatorIconType;
 };
 
 export const iconsMap = new Map<string, CarbonIconType>();

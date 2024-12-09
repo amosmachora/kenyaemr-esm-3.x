@@ -1,32 +1,41 @@
-import { getAssignedExtensions, useConfig } from '@openmrs/esm-framework';
+import { useConfig } from '@openmrs/esm-framework';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BillingConfig } from '../config-schema';
+import { NavigatorIcon } from './navigator-icon';
 import styles from './navigator.scss';
 import { SuperNavigator, SuperNavigatorNode } from './super-navigator';
 import { iconsMap, openmrsBase, Route } from './utils';
 
 export const Navigator = ({ closeNavigator }: { closeNavigator: () => void }) => {
-  const { extraRoutes, isExclusive } = useConfig<BillingConfig>();
-  const homeLeftNavExtensions = getAssignedExtensions('homepage-dashboard-slot');
+  const { superNavigatorIcons } = useConfig<BillingConfig>();
 
-  const homePageRoutes: Route[] = homeLeftNavExtensions.map((ext) => {
-    const extensionMetaName = ext.meta.name.toLowerCase();
+  const allLinks = Array.from(document.querySelectorAll('a'));
+  const routes = allLinks
+    .map((link) => link.href)
+    .filter((link) => Boolean(link))
+    .filter((link) => link.includes('/patient') === false);
 
-    const link = extensionMetaName.includes('home')
-      ? openmrsBase + extensionMetaName
-      : openmrsBase + 'home/' + extensionMetaName;
+  const homePageRoutes: Route[] = Array.from(new Set(routes)).map((link) => {
+    const splitLink = link.split('/').filter((s) => Boolean(s));
+    const name = splitLink.at(-1);
+    const linkIcon = superNavigatorIcons.find((icon) => icon.leftPanelName.toLowerCase() === name);
+    const linkWithoutHostName = link.substring(link.indexOf(openmrsBase));
+    const hardCodedIcon = iconsMap.get(linkWithoutHostName);
+
     return {
-      icon: iconsMap.get(link) ?? 'String',
-      link,
-      text: ext.meta.name,
+      icon: linkIcon?.carbonIcon ?? linkIcon?.svgString ?? hardCodedIcon ?? name.at(0),
+      link: linkWithoutHostName.endsWith('/') ? linkWithoutHostName.slice(0, -1) : linkWithoutHostName,
+      text: name,
+      iconType: linkIcon?.carbonIcon ? 'loaded' : linkIcon?.svgString ? 'svg' : hardCodedIcon ? 'hard-coded' : 'letter',
     };
   });
 
-  const homeRoutesNavigator = new SuperNavigator([]);
+  const homeRoutesNavigator = new SuperNavigator(homePageRoutes);
+
   const [currentOptions, setCurrentOptions] = useState<SuperNavigatorNode[]>([
-    // homeRoutesNavigator.root,
-    // ...homeRoutesNavigator.root.children,
+    homeRoutesNavigator.root,
+    ...homeRoutesNavigator.root.children,
   ]);
 
   // TODO fix bug on clicking routes with children. You currently cannot be redirected to the route
@@ -45,14 +54,14 @@ export const Navigator = ({ closeNavigator }: { closeNavigator: () => void }) =>
                 onClick={() => setCurrentOptions([option, ...option.children])}
                 tabIndex={0}
                 role="button">
-                {<option.icon />}
+                <NavigatorIcon icon={option.icon} />
                 {option.text}
               </div>
             );
           }
           return (
             <Link to={option.link} onClick={closeNavigator}>
-              {<option.icon />}
+              <NavigatorIcon icon={option.icon} />
               {option.text}
             </Link>
           );

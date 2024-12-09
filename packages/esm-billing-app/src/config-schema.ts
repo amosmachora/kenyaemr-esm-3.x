@@ -28,34 +28,11 @@ export interface BillingConfig {
     emergencyPriorityConceptUuid: string;
   };
   paymentMethodsUuidsThatShouldNotShowPrompt: Array<string>;
-  extraRoutes: Array<{ link: string }>;
   isExclusive: boolean;
-  dashboardGroupSlots: Array<{ link: string }>;
+  superNavigatorIcons: Array<{ leftPanelName: string; carbonIcon: string | undefined; svgString: string | undefined }>;
 }
 
 export const configSchema: ConfigSchema = {
-  extraRoutes: {
-    _type: Type.Array,
-    _description: `This are routes that are not automatically configured by the super navigator`,
-    _default: [],
-    _elements: {
-      link: {
-        _type: Type.String,
-        _description: `The path of the route. An example is openmrs/spa/home/billing/payment-history`,
-      },
-    },
-  },
-  dashboardGroupSlots: {
-    _type: Type.Array,
-    _description: `This is if you use dashboard groups in your implementation. Provide the slot names here for them to be configured correctly`,
-    _default: [],
-    _elements: {
-      slotName: {
-        _type: Type.String,
-        _description: `The dashboard group slot name e.g billing-dashboard-link-slot`,
-      },
-    },
-  },
   isExclusive: {
     _type: Type.Boolean,
     _description: `If you only want to use the super navigator exclusively turn this flag on`,
@@ -64,7 +41,7 @@ export const configSchema: ConfigSchema = {
   superNavigatorIcons: {
     _type: Type.Array,
     _elements: {
-      route: {
+      leftPanelName: {
         _type: Type.String,
         _description: `The route not including the domain. For example 'openmrs/spa/home/providers'`,
       },

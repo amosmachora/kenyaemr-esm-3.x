@@ -12,18 +12,11 @@ import { Navigator } from './navigator';
 export const SuperNavigationLauncher = () => {
   const { t } = useTranslation();
   const [isShowingNavigator, setIsShowingNavigator] = useState(false);
-  const { extraRoutes, isExclusive } = useConfig<BillingConfig>();
+  const { isExclusive } = useConfig<BillingConfig>();
 
   useEffect(() => {
     const firstSection = document.querySelector('section');
     if (isExclusive) {
-      // TODO you can remove the sidebar uing some sidebar configuration
-      // const homesidebar = document.querySelector('[data-extension-slot-name="home-sidebar-slot"]');
-
-      // if (homesidebar) {
-      //   homesidebar.remove();
-      // }
-
       firstSection.style.marginLeft = '0';
     } else {
       firstSection.style.marginLeft = '16rem';
